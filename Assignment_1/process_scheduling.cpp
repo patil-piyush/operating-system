@@ -45,6 +45,23 @@ public:
                  << WT[i] << "\n";
         }
 
+        float avgWT = 0, avgTAT = 0, avgCT = 0;
+        for (int i = 0; i < p; i++)
+        {
+            avgWT += WT[i];
+            avgTAT += TAT[i];
+            avgCT += CT[i];
+        }
+        avgWT /= p;
+        avgTAT /= p;
+        avgCT /= p;
+
+        cout << "----------------------------------------------\n";
+
+        cout << "Average Completion Time: " << avgCT << "\n";
+        cout << "Average Turn Around Time: " << avgTAT << "\n";
+        cout << "Average Waiting Time: " << avgWT << "\n";
+
         cout << "==============================================\n\n";
     }
 
@@ -354,7 +371,9 @@ public:
 int main()
 {
     int choice, subChoice;
-
+    cout << "\n===== CPU Scheduling Menu =====\n\n";
+    process p;
+    p.inputData();
     while (true)
     {
         cout << "\n===== CPU Scheduling Menu =====\n";
@@ -371,9 +390,6 @@ int main()
             cout << "Exiting program...\n";
             break;
         }
-
-        process p;
-        p.inputData();
 
         switch (choice)
         {
