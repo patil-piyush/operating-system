@@ -3,10 +3,10 @@
 #include <climits>
 using namespace std;
 /*
-    1. FCFS
-    2. SJF – Preemptive and Non-preemptive
-    3. Round Robin
-    4. Priority – Preemptive and Non-preemptive
+    1. FCFS                                             done
+    2. SJF – Preemptive and Non-preemptive              done
+    3. Round Robin                                      done
+    4. Priority – Preemptive and Non-preemptive         done
 */
 
 class process
@@ -20,6 +20,7 @@ private:
     int *RT;           // remaining time
     int *TAT;          // turn around time
     bool *isCompleted; // to check if process is completed
+    int *priority;     // priority of processes (for priority scheduling)
 
 public:
     process()
@@ -30,7 +31,7 @@ public:
     void displayData()
     {
         cout << "\n================ Process Table ================\n";
-        cout << "PID\tAT\tBT\tCT\tTAT\tWT\n";
+        cout << "PID\tAT\tBT\tPt\tCT\tTAT\tWT\n";
         cout << "----------------------------------------------\n";
 
         for (int i = 0; i < p; i++)
@@ -38,6 +39,7 @@ public:
             cout << i + 1 << "\t"
                  << AT[i] << "\t"
                  << BT[i] << "\t"
+                 << priority[i] << "\t"
                  << CT[i] << "\t"
                  << TAT[i] << "\t"
                  << WT[i] << "\n";
@@ -57,24 +59,37 @@ public:
         RT = new int[p];
         TAT = new int[p];
         isCompleted = new bool[p];
-        cout << "Enter the AT time for each process\n";
-        for (int i = 0; i < p; i++)
-        {
-            cin >> AT[i];
-        }
-        cout << "Enter the BT time for each process\n";
-        for (int i = 0; i < p; i++)
-        {
-            cin >> BT[i];
-        }
-        cout << endl
-             << endl;
+        priority = new int[p];
         for (int i = 0; i < p; i++)
         {
             CT[i] = 0;
             TAT[i] = 0;
             WT[i] = 0;
+            priority[i] = 0;
         }
+        cout << "Enter the Arrival time for each process\n";
+        for (int i = 0; i < p; i++)
+        {
+            cin >> AT[i];
+        }
+        cout << "Enter the Burst time for each process\n";
+        for (int i = 0; i < p; i++)
+        {
+            cin >> BT[i];
+        }
+        cout<<"Is there any priority for the processes? (1 for Yes, 0 for No): ";
+        int hasPriority;
+        cin >> hasPriority;
+        if (hasPriority) {
+            cout << "Enter the Priority for each process\n";
+            for (int i = 0; i < p; i++)
+            {
+                cin >> priority[i];
+            }
+        }
+        cout << endl
+             << endl;
+        cout<<"Entered Data:\n";
         displayData();
     }
 
@@ -188,6 +203,152 @@ public:
 
         displayData();
     }
+
+    // non-preemptive priority scheduling
+    void NPPriorityScheduling()
+    {
+        for (int i = 0; i < p; i++)
+        {
+            isCompleted[i] = false;
+        }
+
+        int time = 0, completed = 0;
+        while (completed < p)
+        {
+            int index = -1;
+            int highestPriority = INT_MAX;
+
+            for (int i = 0; i < p; i++)
+            {
+                if (AT[i] <= time && !isCompleted[i] && priority[i] < highestPriority)
+                {
+                    highestPriority = priority[i];
+                    index = i;
+                }
+            }
+
+            if (index == -1)
+            {
+                time++;
+            }
+            else
+            {
+                time += BT[index];
+                CT[index] = time;
+                TAT[index] = CT[index] - AT[index];
+                WT[index] = TAT[index] - BT[index];
+
+                isCompleted[index] = true;
+                completed++;
+            }
+        }
+        displayData();
+    }
+
+    // preemptive priority scheduling
+    void PPriorityScheduling()
+    {
+        for (int i = 0; i < p; i++)
+        {
+            RT[i] = BT[i]; // Remaining Time
+            isCompleted[i] = false;
+        }
+
+        int time = 0, completed = 0;
+
+        while (completed < p)
+        {
+            int index = -1;
+            int highestPriority = INT_MAX;
+
+            // Find process with highest priority
+            for (int i = 0; i < p; i++)
+            {
+                if (AT[i] <= time && !isCompleted[i] && priority[i] < highestPriority)
+                {
+                    highestPriority = priority[i];
+                    index = i;
+                }
+            }
+
+            // CPU idle
+            if (index == -1)
+            {
+                time++;
+            }
+            else
+            {
+                RT[index]--; // execute for 1 unit
+                time++;
+
+                if (RT[index] == 0)
+                {
+                    CT[index] = time;
+                    TAT[index] = CT[index] - AT[index];
+                    WT[index] = TAT[index] - BT[index];
+
+                    isCompleted[index] = true;
+                    completed++;
+                }
+            }
+        }
+
+        displayData();
+    }
+
+    // Round Robin scheduling
+    void RoundRobinScheduling()
+    {
+            int timeQuantum;
+            cout << "Enter Time Quantum: ";
+            cin >> timeQuantum;
+    
+            for (int i = 0; i < p; i++)
+            {
+                RT[i] = BT[i]; // Remaining Time
+                isCompleted[i] = false;
+            }
+    
+            int time = 0, completed = 0;
+    
+            while (completed < p)
+            {
+                bool allIdle = true;
+    
+                for (int i = 0; i < p; i++)
+                {
+                    if (AT[i] <= time && !isCompleted[i])
+                    {
+                        allIdle = false;
+    
+                        if (RT[i] > timeQuantum)
+                        {
+                            RT[i] -= timeQuantum;
+                            time += timeQuantum;
+                        }
+                        else
+                        {
+                            time += RT[i];
+                            RT[i] = 0;
+                            CT[i] = time;
+                            TAT[i] = CT[i] - AT[i];
+                            WT[i] = TAT[i] - BT[i];
+    
+                            isCompleted[i] = true;
+                            completed++;
+                        }
+                    }
+                }
+    
+                // If all processes are idle, move to the next time unit
+                if (allIdle)
+                {
+                    time++;
+                }
+            }
+    
+            displayData();
+    }
 };
 
 int main()
@@ -238,7 +399,7 @@ int main()
 
         case 3: // Round Robin
             cout << "\n--- Round Robin Scheduling ---\n";
-            cout << "Round Robin not implemented yet.\n";
+            p.RoundRobinScheduling();
             break;
 
         case 4: // Priority
@@ -249,9 +410,9 @@ int main()
             cin >> subChoice;
 
             if (subChoice == 1)
-                cout << "Non-Preemptive Priority not implemented yet.\n";
+                p.NPPriorityScheduling();
             else if (subChoice == 2)
-                cout << "Preemptive Priority not implemented yet.\n";
+                p.PPriorityScheduling();
             else
                 cout << "Invalid choice!\n";
             break;
