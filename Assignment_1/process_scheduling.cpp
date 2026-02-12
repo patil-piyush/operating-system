@@ -94,10 +94,11 @@ public:
         {
             cin >> BT[i];
         }
-        cout<<"Is there any priority for the processes? (1 for Yes, 0 for No): ";
+        cout << "Is there any priority for the processes? (1 for Yes, 0 for No): ";
         int hasPriority;
         cin >> hasPriority;
-        if (hasPriority) {
+        if (hasPriority)
+        {
             cout << "Enter the Priority for each process\n";
             for (int i = 0; i < p; i++)
             {
@@ -106,27 +107,34 @@ public:
         }
         cout << endl
              << endl;
-        cout<<"Entered Data:\n";
+        cout << "Entered Data:\n";
         displayData();
     }
 
     void FCFS()
     {
-        WT[0] = 0;
-        cout << "ProcessID\t" << "WT Time\n";
-        cout << "   " << 1 << "\t\t" << 0 << endl;
-        for (int i = 1; i < p; i++)
+        int currentTime = 0;
+
+        for (int i = 0; i < p; i++)
         {
-            WT[i] = BT[i - 1] + WT[i - 1];
-            // condition to check if the cpu is in ideal mode
-            if (AT[i] > WT[i])
-            {
-                WT[i] = AT[i];
-            }
-            cout << "   " << i + 1 << "\t\t" << WT[i] << endl;
+            // If CPU is idle, move time forward
+            if (currentTime < AT[i])
+                currentTime = AT[i];
+
+            // Completion Time
+            CT[i] = currentTime + BT[i];
+
+            // Turnaround Time
+            TAT[i] = CT[i] - AT[i];
+
+            // Waiting Time
+            WT[i] = TAT[i] - BT[i];
+
+            // Move current time
+            currentTime = CT[i];
         }
-        cout << endl
-             << endl;
+
+        displayData();
     }
 
     void NPSJFScheduling()
@@ -316,55 +324,55 @@ public:
     // Round Robin scheduling
     void RoundRobinScheduling()
     {
-            int timeQuantum;
-            cout << "Enter Time Quantum: ";
-            cin >> timeQuantum;
-    
+        int timeQuantum;
+        cout << "Enter Time Quantum: ";
+        cin >> timeQuantum;
+
+        for (int i = 0; i < p; i++)
+        {
+            RT[i] = BT[i]; // Remaining Time
+            isCompleted[i] = false;
+        }
+
+        int time = 0, completed = 0;
+
+        while (completed < p)
+        {
+            bool allIdle = true;
+
             for (int i = 0; i < p; i++)
             {
-                RT[i] = BT[i]; // Remaining Time
-                isCompleted[i] = false;
-            }
-    
-            int time = 0, completed = 0;
-    
-            while (completed < p)
-            {
-                bool allIdle = true;
-    
-                for (int i = 0; i < p; i++)
+                if (AT[i] <= time && !isCompleted[i])
                 {
-                    if (AT[i] <= time && !isCompleted[i])
+                    allIdle = false;
+
+                    if (RT[i] > timeQuantum)
                     {
-                        allIdle = false;
-    
-                        if (RT[i] > timeQuantum)
-                        {
-                            RT[i] -= timeQuantum;
-                            time += timeQuantum;
-                        }
-                        else
-                        {
-                            time += RT[i];
-                            RT[i] = 0;
-                            CT[i] = time;
-                            TAT[i] = CT[i] - AT[i];
-                            WT[i] = TAT[i] - BT[i];
-    
-                            isCompleted[i] = true;
-                            completed++;
-                        }
+                        RT[i] -= timeQuantum;
+                        time += timeQuantum;
+                    }
+                    else
+                    {
+                        time += RT[i];
+                        RT[i] = 0;
+                        CT[i] = time;
+                        TAT[i] = CT[i] - AT[i];
+                        WT[i] = TAT[i] - BT[i];
+
+                        isCompleted[i] = true;
+                        completed++;
                     }
                 }
-    
-                // If all processes are idle, move to the next time unit
-                if (allIdle)
-                {
-                    time++;
-                }
             }
-    
-            displayData();
+
+            // If all processes are idle, move to the next time unit
+            if (allIdle)
+            {
+                time++;
+            }
+        }
+
+        displayData();
     }
 };
 
