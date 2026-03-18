@@ -19,6 +19,11 @@ int main() {
 
         fd = open("mypipe", O_WRONLY);
 
+        if (fd < 0) {
+            perror("open");
+            return 1;
+        }
+
         write(fd, message, strlen(message) + 1);
 
         close(fd);

@@ -11,7 +11,10 @@ int main() {
     int fd;
     char buffer[100];
 
-    mkfifo("mypipe", 0666);
+    // Create FIFO (ignore error if already exists)
+    if (mkfifo("mypipe", 0666) == -1) {
+        cout << "Pipe may already exist\n";
+    }
 
     cout << "Reader started. Waiting for messages...\n";
 
@@ -19,9 +22,19 @@ int main() {
 
         fd = open("mypipe", O_RDONLY);
 
-        read(fd, buffer, sizeof(buffer));
+        if (fd < 0) {
+            perror("open");
+            return 1;
+        }
 
-        cout << "Received: " << buffer << endl;
+        memset(buffer, 0, sizeof(buffer)); // clear buffer
+
+        int n = read(fd, buffer, sizeof(buffer) - 1);
+
+        if (n > 0) {
+            buffer[n] = '\0'; // ensure null termination
+            cout << "Received: " << buffer << endl;
+        }
 
         close(fd);
 
@@ -29,7 +42,7 @@ int main() {
             break;
     }
 
-    unlink("mypipe");
+    unlink("mypipe"); // delete pipe
 
     return 0;
 }
